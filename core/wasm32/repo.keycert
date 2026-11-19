@@ -1,0 +1,11 @@
+{
+  "cert": {
+    "formatVersion": 1,
+    "key": "ttWLPTTxQaveLHcKm7/570DZt64uewKfEfkpTsoytCk=",
+    "delegated-to": "core",
+    "serial": 1,
+    "notBefore": "2026-11-19T15:04:38.596Z",
+    "expires": "2027-02-17T15:04:38.596Z"
+  },
+  "sig": "OgHIeaGRVO0PBx1jtnCLftB9JtXlblZMXs3STLIHud6dWb/sIF10g61S3CdiIPvuT9sR3hh3mZe6GJ7Rb+ofDQ=="
+}

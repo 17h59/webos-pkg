@@ -1,0 +1,22 @@
+# WEBBUILD de hello — exemple minimal (source locale, pas de téléchargement). Format : ports/README.md.
+pkgname=hello
+pkgver=1.0
+pkgrel=1
+pkgdesc="dit bonjour (exemple de paquet construit par webpkg-build)"
+url="https://github.com/17h59/webos"
+license=('MIT')
+arch=wasm32
+tier=system
+depends=()
+makedepends=()
+embeds=()
+source=('hello.c')
+sha256sums=('d22e5d2a7d568bf83ca9133a33dce071e7317be5095e05effd80b642e897d75b')
+
+build() {
+  webos-cc -Oz -o hello hello.c
+}
+
+package() {
+  install -Dm755 hello "$pkgdir/usr/bin/hello"
+}

@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "package": "tree-0:2.3.2-1-wasm32.wpkg",
+  "sha256": "676a7d097e452af741eec6cd3794a3793b292f710a2c13fb232b302831207e0c",
+  "recipe": {
+    "path": "ports/tree",
+    "files": {
+      "WEBBUILD": "0b3d52ef273a1240ecb10c7c37c17799cb93cfc4414afae94a71b8bb5c301ca5"
+    }
+  },
+  "sources": [
+    {
+      "source": "https://deb.debian.org/debian/pool/main/t/tree/tree_2.3.2.orig.tar.gz",
+      "sha256": "6b941dd6cbecfb4d3250700e4d08d8e0c251488981dd4868b90d744234300e21"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 1794951871
+}

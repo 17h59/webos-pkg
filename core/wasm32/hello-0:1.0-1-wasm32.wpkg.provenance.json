@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "package": "hello-0:1.0-1-wasm32.wpkg",
+  "sha256": "e88458b912cdec54f62383593f42ebc6b211b910ae9bcb0a9a1d01c18e0b57c0",
+  "recipe": {
+    "path": "ports/hello",
+    "files": {
+      "WEBBUILD": "40564d2cdfdb7e18c6b1819b78335273a09b2a42b437bdf5fd74068cdbf56c9d",
+      "hello.c": "d22e5d2a7d568bf83ca9133a33dce071e7317be5095e05effd80b642e897d75b"
+    }
+  },
+  "sources": [
+    {
+      "source": "hello.c",
+      "sha256": "d22e5d2a7d568bf83ca9133a33dce071e7317be5095e05effd80b642e897d75b"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 1794950918
+}

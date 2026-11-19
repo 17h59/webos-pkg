@@ -1,0 +1,43 @@
+{
+  "formatVersion": 1,
+  "name": "core",
+  "serial": 2026111901,
+  "expires": "2027-01-18T15:06:21.496Z",
+  "generated": "2026-11-19T15:06:21.496Z",
+  "packages": {
+    "hello": {
+      "version": "1.0-1",
+      "filename": "hello-0:1.0-1-wasm32.wpkg",
+      "size": 10437,
+      "sha256": "e88458b912cdec54f62383593f42ebc6b211b910ae9bcb0a9a1d01c18e0b57c0",
+      "chunkManifest": {
+        "formatVersion": 1,
+        "size": 10437,
+        "chunkSize": 1048576,
+        "chunks": [
+          "e88458b912cdec54f62383593f42ebc6b211b910ae9bcb0a9a1d01c18e0b57c0"
+        ]
+      },
+      "desc": "dit bonjour (exemple de paquet construit par webpkg-build)",
+      "arch": "wasm32",
+      "tier": "system"
+    },
+    "tree": {
+      "version": "2.3.2-1",
+      "filename": "tree-0:2.3.2-1-wasm32.wpkg",
+      "size": 59134,
+      "sha256": "676a7d097e452af741eec6cd3794a3793b292f710a2c13fb232b302831207e0c",
+      "chunkManifest": {
+        "formatVersion": 1,
+        "size": 59134,
+        "chunkSize": 1048576,
+        "chunks": [
+          "676a7d097e452af741eec6cd3794a3793b292f710a2c13fb232b302831207e0c"
+        ]
+      },
+      "desc": "affiche le contenu des dossiers sous forme d'arbre",
+      "arch": "wasm32",
+      "tier": "system"
+    }
+  }
+}

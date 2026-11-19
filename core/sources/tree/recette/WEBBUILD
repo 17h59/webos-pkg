@@ -1,0 +1,26 @@
+# WEBBUILD de tree — affiche une arborescence de fichiers (premier vrai logiciel porté par webpkg-build, M3.3c).
+# Source : l'archive d'origine conservée par Debian (stable dans le temps ; les archives générées par GitLab peuvent changer d'octets).
+pkgname=tree
+pkgver=2.3.2
+pkgrel=1
+pkgdesc="affiche le contenu des dossiers sous forme d'arbre"
+url="https://oldmanprogrammer.net/source.php?dir=projects/tree"
+license=('GPL-2.0-or-later')
+arch=wasm32
+tier=system
+source=("https://deb.debian.org/debian/pool/main/t/tree/tree_${pkgver}.orig.tar.gz")
+sha256sums=('6b941dd6cbecfb4d3250700e4d08d8e0c251488981dd4868b90d744234300e21')
+
+build() {
+  cd "tree-$pkgver"
+  # strverscmp.o retiré : la libc (wasi-libc) la fournit déjà, comme la glibc sous Linux
+  make CC=webos-cc CFLAGS="-Oz -std=c11 -D_GNU_SOURCE" LDFLAGS= \
+    OBJS="color.o file.o filter.o hash.o html.o info.o json.o list.o tree.o unix.o util.o xml.o"
+}
+
+package() {
+  cd "tree-$pkgver"
+  install -Dm755 tree "$pkgdir/usr/bin/tree"
+  install -Dm644 doc/tree.1 "$pkgdir/usr/share/man/man1/tree.1"
+  install -Dm644 LICENSE "$pkgdir/usr/share/licenses/tree/LICENSE"
+}
