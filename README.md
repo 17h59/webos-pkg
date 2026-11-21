@@ -1,5 +1,7 @@
 # webos-pkg — dépôt de paquets de webOS (PRÉ-PRODUCTION)
 
+> **⚠ Pré-production, clés exposées.** Les clés privées qui signent ce dépôt ont été affichées dans une conversation de travail (2026-11-21). Les signatures de ce dépôt ne prouvent donc rien : il sert aux essais de webOS, pas à installer des logiciels de confiance. La production aura une nouvelle racine.
+
 Dépôt **statique** de paquets pour [webOS](https://webos.nsi.xyz/) (`webpkg`), publié par GitHub Pages :
 **`https://17h59.github.io/webos-pkg/core`** (configuré par défaut dans `/etc/webpkg/repos.json` de l'image).
 
