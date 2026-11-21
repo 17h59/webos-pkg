@@ -1,0 +1,31 @@
+{
+  "formatVersion": 1,
+  "package": "nano-0:8.4-1-wasm32.wpkg",
+  "sha256": "f4404b77fffc959f673741c30ba3cd3d21061f28e0d653d2584fe28aeab2b6f8",
+  "recipe": {
+    "path": "ports/nano",
+    "files": {
+      "WEBBUILD": "5fc969248bd4e9855056a1dc546ca52abb3d02c5ade2cb34e63a88c2cd3b18d6",
+      "nanorc": "a0586e02b1f6cfe46a4f9d0341ef5da467bab56778ed5edae988ff211bd5a96a"
+    }
+  },
+  "sources": [
+    {
+      "source": "https://deb.debian.org/debian/pool/main/n/ncurses/ncurses_6.5+20250216.orig.tar.gz",
+      "sha256": "b37baafa436e7133bb12a185cb8f60e1599b1947e9f0181c76f3190acf28b6eb"
+    },
+    {
+      "source": "https://deb.debian.org/debian/pool/main/n/nano/nano_8.4.orig.tar.xz",
+      "sha256": "5ad29222bbd55624d87ea677928b3106a743114d6c6f9b41f36c97be2a8e628d"
+    },
+    {
+      "source": "nanorc",
+      "sha256": "a0586e02b1f6cfe46a4f9d0341ef5da467bab56778ed5edae988ff211bd5a96a"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 1795285474
+}

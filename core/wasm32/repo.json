@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "name": "core",
-  "serial": 2026111901,
-  "expires": "2027-01-18T15:06:21.496Z",
-  "generated": "2026-11-19T15:06:21.496Z",
+  "serial": 2026112101,
+  "expires": "2027-01-20T18:27:43.994Z",
+  "generated": "2026-11-21T18:27:43.994Z",
   "packages": {
     "hello": {
       "version": "1.0-1",
@@ -19,6 +19,23 @@
         ]
       },
       "desc": "dit bonjour (exemple de paquet construit par webpkg-build)",
+      "arch": "wasm32",
+      "tier": "system"
+    },
+    "nano": {
+      "version": "8.4-1",
+      "filename": "nano-0:8.4-1-wasm32.wpkg",
+      "size": 252090,
+      "sha256": "f4404b77fffc959f673741c30ba3cd3d21061f28e0d653d2584fe28aeab2b6f8",
+      "chunkManifest": {
+        "formatVersion": 1,
+        "size": 252090,
+        "chunkSize": 1048576,
+        "chunks": [
+          "f4404b77fffc959f673741c30ba3cd3d21061f28e0d653d2584fe28aeab2b6f8"
+        ]
+      },
+      "desc": "éditeur de texte simple pour le terminal",
       "arch": "wasm32",
       "tier": "system"
     },

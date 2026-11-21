@@ -1,0 +1,9 @@
+## /etc/nanorc — réglages de nano pour tout le système (webOS). Les réglages personnels vont dans ~/.nanorc.
+## Liste complète des options : `man nanorc`.
+
+## coloration syntaxique (fichiers de /usr/share/nano/)
+include "/usr/share/nano/*.nanorc"
+
+## numéros de ligne et position du curseur
+# set linenumbers
+set constantshow

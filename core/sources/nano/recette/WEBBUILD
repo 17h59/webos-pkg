@@ -1,0 +1,58 @@
+# WEBBUILD de nano — éditeur de texte plein écran (M3.5a). ncurses est compilée ici et liée DANS le programme (pas de bibliothèques
+# partagées sous webOS) ; les descriptions de terminal y sont intégrées (--with-fallbacks) : aucune base terminfo à installer.
+# Sources : archives d'origine conservées par Debian (versions de Debian 13 « trixie »).
+pkgname=nano
+pkgver=8.4
+pkgrel=1
+_ncurses=6.5+20250216
+pkgdesc="éditeur de texte simple pour le terminal"
+url="https://www.nano-editor.org/"
+license=('GPL-3.0-or-later' 'X11-distribute-modifications-variant')
+arch=wasm32
+tier=system
+embeds=("ncurses=${_ncurses}")
+backup=('etc/nanorc')
+source=("https://deb.debian.org/debian/pool/main/n/ncurses/ncurses_${_ncurses}.orig.tar.gz"
+        "https://deb.debian.org/debian/pool/main/n/nano/nano_${pkgver}.orig.tar.xz"
+        'nanorc')
+sha256sums=('b37baafa436e7133bb12a185cb8f60e1599b1947e9f0181c76f3190acf28b6eb'
+            '5ad29222bbd55624d87ea677928b3106a743114d6c6f9b41f36c97be2a8e628d'
+            'a0586e02b1f6cfe46a4f9d0341ef5da467bab56778ed5edae988ff211bd5a96a')
+
+# configure de nano (gnulib) : réponses connues de webOS (config.site), webos-cc sans ses déclarations pendant les tests (voir le config.site).
+_conf() {
+  CONFIG_SITE=/w/toolchain/autoconf/config.site WEBOS_CC_CONFIGURE=1 CC=webos-cc "$@" \
+    --host=wasm32-unknown-linux-musl --build=x86_64-linux-gnu --prefix=/usr
+}
+
+build() {
+  local stage="$srcdir/stage"
+  cd "$srcdir/ncurses-${_ncurses/+/-}"
+  # ncurses n'utilise pas gnulib : configure ordinaire (avec WEBOS_CC_CONFIGURE, son test de sig_atomic_t échoue)
+  CC=webos-cc CFLAGS="-Oz -D_GNU_SOURCE" ./configure --host=wasm32-wasi --build=x86_64-linux-gnu --prefix=/usr --with-build-cc=gcc \
+    --without-shared --without-debug --without-ada --without-cxx --without-cxx-binding --without-progs --without-tests \
+    --without-manpages --without-pkg-config --enable-pc-files=no --enable-widec --disable-database --disable-db-install \
+    --disable-home-terminfo --with-fallbacks=xterm-256color,xterm,vt100,linux,dumb
+  make
+  make install.libs install.includes DESTDIR="$stage"
+
+  cd "$srcdir/nano-$pkgver"
+  CFLAGS="-Oz -D_GNU_SOURCE -I$stage/usr/include" LDFLAGS="-L$stage/usr/lib" NCURSESW_CFLAGS="-DNCURSES_STATIC" NCURSESW_LIBS="-lncursesw" \
+    _conf ./configure --sysconfdir=/etc --disable-nls --disable-libmagic --disable-speller --disable-browser
+  # gnulib exige que config.h soit lu AVANT tout autre en-tête, y compris celui que webos-cc ajoute d'office
+  WEBOS_CC_PREINCLUDE=config.h make -C lib
+  WEBOS_CC_PREINCLUDE=config.h make -C src
+}
+
+package() {
+  cd "$srcdir/nano-$pkgver"
+  install -Dm755 src/nano "$pkgdir/usr/bin/nano"
+  ln -s nano "$pkgdir/usr/bin/rnano"
+  install -Dm644 "$srcdir/nanorc" "$pkgdir/etc/nanorc"
+  for f in syntax/*.nanorc; do install -Dm644 "$f" "$pkgdir/usr/share/nano/${f#syntax/}"; done
+  install -Dm644 doc/nano.1 "$pkgdir/usr/share/man/man1/nano.1"
+  install -Dm644 doc/rnano.1 "$pkgdir/usr/share/man/man1/rnano.1"
+  install -Dm644 doc/nanorc.5 "$pkgdir/usr/share/man/man5/nanorc.5"
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/nano/COPYING"
+  install -Dm644 "$srcdir/ncurses-${_ncurses/+/-}"/COPYING "$pkgdir/usr/share/licenses/nano/ncurses-COPYING"
+}
