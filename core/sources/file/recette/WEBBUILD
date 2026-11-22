@@ -1,0 +1,44 @@
+# WEBBUILD de file — dit de quel type est un fichier (texte, archive, image, programme…) d'après son contenu (M3.5b).
+# libmagic est liée dans le programme. La base de signatures (magic.mgc) est compilée par un `file` construit pour la MACHINE de
+# construction : file exige la même version pour compiler sa base, et le format de la base ne dépend pas de la machine.
+# Source : archive d'origine conservée par Debian (version de Debian 13 « trixie »).
+pkgname=file
+pkgver=5.46
+pkgrel=1
+pkgdesc="identifie le type d'un fichier d'après son contenu"
+url="https://www.darwinsys.com/file/"
+license=('BSD-2-Clause')
+arch=wasm32
+tier=system
+source=("https://deb.debian.org/debian/pool/main/f/file/file_${pkgver}.orig.tar.gz")
+sha256sums=('c9cc77c7c560c543135edc555af609d5619dbef011997e988ce40a3d75d86088')
+
+# pas de bibliothèques de décompression (file -z) : elles seraient à porter aussi
+_noz=(--disable-shared --disable-zlib --disable-bzlib --disable-xzlib --disable-zstdlib --disable-lzlib --disable-libseccomp)
+
+prepare() {
+  cp -a "file-$pkgver" native
+  cd "file-$pkgver"
+  # WASI n'a pas de fuseaux horaires (heure UTC) : tzset n'existe pas
+  sed -i 's/^\(\s*\)tzset();/\1\/* tzset() : pas de fuseaux horaires sous WASI *\//' src/print.c
+}
+
+build() {
+  # 1. file pour la machine de construction : sert à compiler la base de signatures
+  (cd native && ./configure "${_noz[@]}" && make)
+  # 2. file pour webOS. mmap n'est qu'émulé (mprotect échoue) : la base est lue en mémoire. La réponse est passée EN ARGUMENT de
+  #    configure (et pas seulement par config.site) : un configure relancé par make la garde.
+  cd "file-$pkgver"
+  CONFIG_SITE=/w/toolchain/autoconf/config.site WEBOS_CC_CONFIGURE=1 CC=webos-cc CFLAGS="-Oz -D_GNU_SOURCE" ./configure \
+    --host=wasm32-unknown-linux-musl --build=x86_64-linux-gnu --prefix=/usr --datadir=/usr/share "${_noz[@]}" \
+    ac_cv_func_mmap_fixed_mapped=no
+  make -C src FILE_COMPILE="$srcdir/native/src/file"
+}
+
+package() {
+  cd "file-$pkgver"
+  install -Dm755 src/file "$pkgdir/usr/bin/file"
+  install -Dm644 "$srcdir/native/magic/magic.mgc" "$pkgdir/usr/share/misc/magic.mgc"
+  install -Dm644 "$srcdir/native/doc/file.1" "$pkgdir/usr/share/man/man1/file.1"
+  install -Dm644 COPYING "$pkgdir/usr/share/licenses/file/COPYING"
+}

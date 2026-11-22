@@ -1,10 +1,27 @@
 {
   "formatVersion": 1,
   "name": "core",
-  "serial": 2026112201,
-  "expires": "2027-01-21T06:39:13.316Z",
-  "generated": "2026-11-22T06:39:13.316Z",
+  "serial": 2026112202,
+  "expires": "2027-01-21T11:48:34.347Z",
+  "generated": "2026-11-22T11:48:34.347Z",
   "packages": {
+    "file": {
+      "version": "5.46-1",
+      "filename": "file-0:5.46-1-wasm32.wpkg",
+      "size": 606627,
+      "sha256": "c9e273c1a3fa923c6f9563f8361dd88c6856714f865913d870df1ecc6e6a0068",
+      "chunkManifest": {
+        "formatVersion": 1,
+        "size": 606627,
+        "chunkSize": 1048576,
+        "chunks": [
+          "c9e273c1a3fa923c6f9563f8361dd88c6856714f865913d870df1ecc6e6a0068"
+        ]
+      },
+      "desc": "identifie le type d'un fichier d'après son contenu",
+      "arch": "wasm32",
+      "tier": "system"
+    },
     "hello": {
       "version": "1.0-1",
       "filename": "hello-0:1.0-1-wasm32.wpkg",
