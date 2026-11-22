@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "name": "core",
-  "serial": 2026112204,
-  "expires": "2027-01-21T14:01:27.400Z",
-  "generated": "2026-11-22T14:01:27.400Z",
+  "serial": 2026112205,
+  "expires": "2027-01-21T23:29:45.847Z",
+  "generated": "2026-11-22T23:29:45.847Z",
   "packages": {
     "file": {
       "version": "5.46-1",
@@ -57,24 +57,24 @@
       "tier": "system"
     },
     "python": {
-      "version": "3.13.18-2",
-      "filename": "python-0:3.13.18-2-wasm32.wpkg",
-      "size": 8732616,
-      "sha256": "10862265cd06eb79884e92d4e8e56155c5a3e05c686907443700cd4341ea1cba",
+      "version": "3.13.18-3",
+      "filename": "python-0:3.13.18-3-wasm32.wpkg",
+      "size": 8737840,
+      "sha256": "d88c4635e5c3456f27fe9a9202b6d5bde269c16293abee748ddf5e37b7888a96",
       "chunkManifest": {
         "formatVersion": 1,
-        "size": 8732616,
+        "size": 8737840,
         "chunkSize": 1048576,
         "chunks": [
-          "22fe50671202a15a62410d5d4afa48290f2ced4a7792206b37a7253a380e82a2",
-          "5ce8ce318d51f1e703b4aacbf5731b4a20f2bf35bd2eb70195bc5248d76d3c74",
-          "1df2cec91718f49f38f9633de984038be9a497299dc9cf29256fd8f60ff818e4",
-          "57b146e159332537bdd2e6bae729b08acb506d69c1f2f5be4a6e4ec9a27a01c9",
-          "aab2a2d57059130655203777b01d719b580782fb8560b078f18eac0d70ede7c1",
-          "411112c5a0fae7f6c1cadfe3abf3a37bbd63557b36d395f7af9b698775234823",
-          "089c246be68ddfd383c2662c44b0c3cf3f1df2744b17e82077bc4043b7ff62c9",
-          "b37ec1459c6eca1b3f5712a5a921b136682583563e75b957ace5b49205399a13",
-          "59d859cfb66561ca0280e72ca9c39596e6f8a482a434728e95799bcbd9b1b289"
+          "1cad0939ee65e251396fccb67c22fde15da944fdb2f8f76a2571cb66dbb2a348",
+          "0376ac77e6a7c038f405f4ef055b4973f22cc628c58923a530171b848319859b",
+          "a72e7138d107d91dec2c0ccfec90b712d907ab892aefbe4c2d4774cfb464061d",
+          "ac866da998f9f76497dabd67e5f026a22d3beedebac875757820f3058ff9408b",
+          "cbea9ff4a88eb063302b785d7769105c13bfc6d88b1089c2cb5a8d329b9bb798",
+          "5ee2bffd22a96820f829bec15e843a86c082408578bdb51dc4e8ebf274cbbb10",
+          "820e4f41fcaedd45ea30fcc7023590d029196120bf901f216ce321e7a81d896a",
+          "a13bd07a01fe0cabee9e3f2b33ca033fd63a7078c71e1ef98918f3247cf3ba97",
+          "f9446ef32463ca120c9344f21fb2dc9365b7448adac696f4f36f5b98c9d62be0"
         ]
       },
       "desc": "langage Python 3 (CPython) avec sa bibliothèque standard",

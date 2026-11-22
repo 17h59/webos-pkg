@@ -1,0 +1,195 @@
+webOS (spike S11, décision D-FORK-COUCHES) : os.fork() par reprise du cadre Python.
+Le noyau copie la mémoire ; le fils (pile C neuve) refait le retour de la petite fonction Python os.fork() avec 0 et relance
+la boucle de l interpréteur sur le cadre appelant. Refus clair (ENOSYS) si une autre boucle est active sous l appel.
+
+diff -ru a/Lib/os.py b/Lib/os.py
+--- a/Lib/os.py
++++ b/Lib/os.py
+@@ -1182,3 +1182,14 @@
+ else:
+     # Just an alias to cpu_count() (same docstring)
+     process_cpu_count = cpu_count
++
++# webOS (spike S11) : le fils d'os.fork() reprend le cadre de l'APPELANT de cette petite fonction (Python/ceval.c,
++# __webos_fork_child_main) ; elle doit rester exactement « return _webos_fork() ».
++if sys.platform == "wasi" and _exists("fork"):
++    _webos_fork = fork
++
++    def fork():
++        """Fork a child process.
++
++        Return 0 to child process and PID of child to parent process."""
++        return _webos_fork()
+diff -ru a/Modules/posixmodule.c b/Modules/posixmodule.c
+--- a/Modules/posixmodule.c
++++ b/Modules/posixmodule.c
+@@ -8118,11 +8118,23 @@
+                         "fork not supported for isolated subinterpreters");
+         return NULL;
+     }
++#ifdef __wasi__
++    /* webOS (spike S11) : refus clair avant toute copie si le fils ne pourrait pas reprendre (Python/ceval.c) */
++    extern int _Py_webos_fork_check(void);
++    if (_Py_webos_fork_check() < 0) {
++        return NULL;
++    }
++#endif
+     if (PySys_Audit("os.fork", NULL) < 0) {
+         return NULL;
+     }
+     PyOS_BeforeFork();
++#ifdef __wasi__
++    /* copie de la mémoire ; le fils ne revient jamais ici, il démarre par __webos_fork_child_main (Python/ceval.c) */
++    pid = __webos_fork_snapshot();
++#else
+     pid = fork();
++#endif
+     int saved_errno = errno;
+     if (pid == 0) {
+         /* child: this clobbers and resets the import lock. */
+diff -ru a/Python/ceval.c b/Python/ceval.c
+--- a/Python/ceval.c
++++ b/Python/ceval.c
+@@ -681,6 +681,12 @@
+  * so consume 3 units of C stack */
+ #define PY_EVAL_C_STACK_UNITS 2
+ 
++#ifdef __wasi__
++/* webOS, spike S11 : cadre à reprendre dans le fils d'os.fork() (voir __webos_fork_child_main, plus bas). Lu UNE fois par entrée
++ * dans la boucle (pas par instruction) : aucun coût mesurable. */
++static _PyInterpreterFrame *webos_fork_resume = NULL;
++#endif
++
+ PyObject* _Py_HOT_FUNCTION
+ _PyEval_EvalFrameDefault(PyThreadState *tstate, _PyInterpreterFrame *frame, int throwflag)
+ {
+@@ -722,6 +728,15 @@
+     entry_frame.previous = tstate->current_frame;
+     frame->previous = &entry_frame;
+     tstate->current_frame = frame;
++#ifdef __wasi__
++    if (webos_fork_resume != NULL) {
++        /* fils d'os.fork() : `frame` est le cadre du BAS de la chaîne (rattaché ci-dessus à notre cadre d'entrée) ; on reprend le
++         * cadre du haut, celui qui a appelé os.fork(), là où il attendait son résultat */
++        frame = webos_fork_resume;
++        webos_fork_resume = NULL;
++        tstate->current_frame = frame;
++    }
++#endif
+ 
+     tstate->c_recursion_remaining -= (PY_EVAL_C_STACK_UNITS - 1);
+     if (_Py_EnterRecursiveCallTstate(tstate, "")) {
+@@ -3127,3 +3142,113 @@
+ {
+     _Py_LeaveRecursiveCall();
+ }
++
++#ifdef __wasi__
++/* ======================================================================================================================
++ * webOS, spike S11 (décision D-FORK-COUCHES) : os.fork() par reprise du cadre Python.
++ *
++ * En WebAssembly, la pile C est cachée par le moteur : un fils ne peut pas « revenir » de l'appel fork() du père. Mais depuis
++ * Python 3.11 les cadres Python vivent dans la mémoire du programme. Le noyau copie toute la mémoire ; le fils démarre sur une pile
++ * C neuve (__webos_fork_child, webos-libc), et ici :
++ *   1. refait le RETOUR de la petite fonction Python os.fork() (Lib/os.py : « return _webos_fork() ») avec 0 pour résultat,
++ *      exactement comme l'instruction RETURN_VALUE (l'appelant a sauvé sa pile de valeurs et son point de retour en l'appelant) ;
++ *   2. relance la boucle de l'interpréteur sur le cadre de l'appelant.
++ * Condition : une seule boucle active sous l'appel (code Python ordinaire de `python3 fichier.py` ou `-c`), et os.fork appelé par
++ * du code Python. Sinon, refus (OSError ENOSYS) AVANT toute copie : la pile C contiendrait autre chose à reprendre.
++ * ==================================================================================================================== */
++#include <errno.h>
++#include <stdlib.h>
++
++/* l'instruction en cours est « CALL 0 » suivie de « RETURN_VALUE » (forme de « return f() ») */
++static int
++webos_is_return_call(_PyInterpreterFrame *f)
++{
++    _Py_CODEUNIT *ip = f->instr_ptr;
++    if (_PyOpcode_Deopt[ip->op.code] != CALL || ip->op.arg != 0) {
++        return 0;
++    }
++    _Py_CODEUNIT *next = ip + 1 + _PyOpcode_Caches[CALL];
++    return _PyOpcode_Deopt[next->op.code] == RETURN_VALUE;
++}
++
++int
++_Py_webos_fork_check(void)
++{
++    PyThreadState *tstate = _PyThreadState_GET();
++    _PyInterpreterFrame *top = tstate->current_frame;
++    const char *why = NULL;
++    const PyConfig *config = _Py_GetConfig();
++    if (config->run_command == NULL && config->run_filename == NULL) {
++        /* interpréteur interactif : le fils finirait la ligne en cours puis sortirait, au lieu de rendre l'invite */
++        why = "os.fork() sous webOS : seulement dans un programme (python3 fichier.py ou python3 -c), pas en interactif";
++    }
++    else if (top == NULL || top->owner == FRAME_OWNED_BY_CSTACK || !webos_is_return_call(top)) {
++        why = "os.fork() sous webOS : appeler os.fork() lui-même (pas posix.fork(), pas sous un traceur ni sys.monitoring)";
++    }
++    else if (top->previous == NULL || top->previous->owner == FRAME_OWNED_BY_CSTACK) {
++        why = "os.fork() sous webOS : impossible quand il est appelé par du code C (map, sorted(key=...), rappel...)";
++    }
++    else {
++        _PyInterpreterFrame *f = top->previous;
++        while (f->owner != FRAME_OWNED_BY_CSTACK) {
++            f = f->previous;
++        }
++        if (f->previous != NULL) {
++            why = "os.fork() sous webOS : impossible quand du code C est en cours sous l'appel (importation, exec(), "
++                  "corps de classe, gestionnaire de signal, map(), sorted(key=...), python -m...)";
++        }
++    }
++    if (why != NULL) {
++        PyObject *args = Py_BuildValue("(is)", ENOSYS, why);
++        if (args != NULL) {
++            PyErr_SetObject(PyExc_OSError, args);
++            Py_DECREF(args);
++        }
++        return -1;
++    }
++    return 0;
++}
++
++void
++__webos_fork_child_main(void)
++{
++    PyOS_AfterFork_Child();
++    PyThreadState *tstate = _PyThreadState_GET();
++
++    /* 1. retour de os.fork() avec 0 (comme _POP_FRAME). Ses variables locales sont libérées ; les deux valeurs de sa pile
++     *    (la fonction appelée et NULL) ne sont pas connues avec certitude : on les laisse (une référence perdue, sans effet). */
++    _PyInterpreterFrame *dying = tstate->current_frame;
++    dying->stacktop = _PyFrame_GetCode(dying)->co_nlocalsplus;
++    _Py_LeaveRecursiveCallPy(tstate);
++    _PyInterpreterFrame *caller = dying->previous;
++    tstate->current_frame = caller;
++    _PyEval_FrameClearAndPop(tstate, dying);
++    _PyFrame_StackPush(caller, PyLong_FromLong(0));
++    caller->instr_ptr += caller->return_offset;
++    caller->return_offset = 0;
++
++    /* 2. la boucle repart du cadre du bas (rattaché au nouveau cadre d'entrée), mais exécute d'abord l'appelant */
++    _PyInterpreterFrame *bottom = caller;
++    while (bottom->previous->owner != FRAME_OWNED_BY_CSTACK) {
++        bottom = bottom->previous;
++    }
++    tstate->current_frame = bottom->previous->previous;
++    webos_fork_resume = caller;
++    tstate->py_recursion_remaining++; /* l'appelant est déjà compté : la boucle le recompte en y entrant */
++    PyObject *res = _PyEval_EvalFrameDefault(tstate, bottom, 0);
++
++    /* 3. fin du programme, comme Py_RunMain (SystemExit : PyErr_Print termine lui-même le processus avec son code) */
++    int code = 0;
++    if (res == NULL) {
++        PyErr_Print();
++        code = 1;
++    }
++    else {
++        Py_DECREF(res);
++    }
++    if (Py_FinalizeEx() < 0) {
++        code = 120;
++    }
++    exit(code);
++}
++#endif /* __wasi__ */

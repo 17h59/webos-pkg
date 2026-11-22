@@ -1,11 +1,12 @@
 # WEBBUILD de python — CPython 3 complet (interpréteur + bibliothèque standard) pour webOS (M3.5c, décision D-PYTHON).
 # Construit deux fois : un CPython pour la MACHINE de construction (exigé par la compilation croisée : il exécute les outils de CPython
 # et précompile la bibliothèque), puis CPython pour webOS (webos-cc, cible wasm32-wasi, tout lié dans un seul programme).
-# Lancer des programmes : par posix_spawn (correctif 0002, `subprocess`, `os.popen`, `os.system`) ; os.fork() n'existe pas (spike S10).
+# Lancer des programmes : par posix_spawn (correctif 0002, `subprocess`, `os.popen`, `os.system`). os.fork() : par reprise du cadre Python
+# (correctif 0003, spike S11, décision D-FORK-COUCHES) — depuis du code Python ordinaire seulement, refus clair (ENOSYS) ailleurs.
 # Source : python.org (archive identique à l'archive d'origine de Debian, même SHA-256).
 pkgname=python
 pkgver=3.13.18
-pkgrel=2
+pkgrel=3
 _pyver=3.13
 _zlib=1.3.1
 pkgdesc="langage Python 3 (CPython) avec sa bibliothèque standard"
@@ -18,11 +19,13 @@ embeds=("zlib=${_zlib}")
 source=("https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
         "https://zlib.net/fossils/zlib-${_zlib}.tar.gz"
         'patches/0001-socket-sans-gethostbyname.patch'
-        'patches/0002-subprocess-posix-spawn.patch')
+        'patches/0002-subprocess-posix-spawn.patch'
+        'patches/0003-os-fork-reprise-du-cadre.patch')
 sha256sums=('abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68'
             '9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23'
             'fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593'
-            'cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a')
+            'cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a'
+            '578404742963d10450c23e25f104f96668641e9c99fdd1035254ed86c2c348a7')
 
 # Fonctions que wasi-libc DÉCLARE sans les fournir (le configure de CPython ne fait souvent que compiler, sans lier), en-têtes de la
 # machine de construction vus à tort, et ce que webOS n'a pas (epoll, timerfd, eventfd, memfd, DNS, utmp, setrlimit…).
@@ -34,7 +37,8 @@ _cache=(ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no ac_cv_func_mmap_fixed_map
   ac_cv_func_memfd_create=no ac_cv_header_sys_memfd_h=no ac_cv_func_setgroups=no
   ac_cv_func_gethostbyname=no ac_cv_func_gethostbyaddr=no ac_cv_func_gethostbyname_r=no ac_cv_func_getservbyname=no
   ac_cv_func_getservbyport=no ac_cv_func_getprotobyname=no ac_cv_func_getnameinfo=no
-  ac_cv_header_libintl_h=no ac_cv_func_bind_textdomain_codeset=no)
+  ac_cv_header_libintl_h=no ac_cv_func_bind_textdomain_codeset=no
+  ac_cv_func_fork=yes)  # pas de symbole fork() dans webos-libc : os.fork passe par __webos_fork_snapshot (correctif 0003)
 
 prepare() {
   cp -a "Python-$pkgver" native
