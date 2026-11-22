@@ -1,0 +1,101 @@
+--- a/Lib/subprocess.py	2026-11-22 12:42:37.135112925 +0000
++++ b/Lib/subprocess.py	2026-11-22 12:42:37.137235808 +0000
+@@ -76,6 +76,8 @@
+ 
+ # some platforms do not support subprocesses
+ _can_fork_exec = sys.platform not in {"emscripten", "wasi", "ios", "tvos", "watchos"}
++# webOS (WASI + libc de webOS) : pas de fork, mais un vrai posix_spawn ; tous les processus passent par lui.
++_webos_spawn = sys.platform == "wasi" and hasattr(os, "posix_spawn")
+ 
+ if _mswindows:
+     import _winapi
+@@ -102,8 +104,9 @@
+                     "CREATE_NO_WINDOW", "DETACHED_PROCESS",
+                     "CREATE_DEFAULT_ERROR_MODE", "CREATE_BREAKAWAY_FROM_JOB"])
+ else:
+-    if _can_fork_exec:
+-        from _posixsubprocess import fork_exec as _fork_exec
++    if _can_fork_exec or _webos_spawn:
++        if _can_fork_exec:
++            from _posixsubprocess import fork_exec as _fork_exec
+         # used in methods that are called by __del__
+         class _del_safe:
+             waitpid = os.waitpid
+@@ -825,7 +828,7 @@
+                  encoding=None, errors=None, text=None, umask=-1, pipesize=-1,
+                  process_group=None):
+         """Create new Popen instance."""
+-        if not _can_fork_exec:
++        if not _can_fork_exec and not _webos_spawn:
+             raise OSError(
+                 errno.ENOTSUP, f"{sys.platform} does not support processes."
+             )
+@@ -1825,6 +1828,54 @@
+                                  c2pread, c2pwrite,
+                                  errread, errwrite)
+ 
++        def _webos_spawn(self, args, executable, env, cwd, preexec_fn, pass_fds, close_fds,
++                         p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite,
++                         restore_signals, gid, gids, uid, umask,
++                         start_new_session, process_group):
++            """webOS : tout passe par posix_spawn (pas de fork). Ce qu'il ne sait pas faire est refusé clairement."""
++            if preexec_fn is not None:
++                raise OSError(errno.ENOTSUP, "webOS : preexec_fn exige fork()")
++            if gid is not None or gids is not None or uid is not None or umask >= 0:
++                raise OSError(errno.ENOTSUP, "webOS : user, group, extra_groups et umask ne sont pas pris en charge")
++            kwargs = {}
++            if start_new_session:
++                kwargs['setsid'] = True
++            if process_group is not None and process_group >= 0:
++                kwargs['setpgroup'] = process_group
++            file_actions = []
++            for fd in (p2cwrite, c2pread, errread):
++                if fd != -1:
++                    file_actions.append((os.POSIX_SPAWN_CLOSE, fd))
++            for fd, fd2 in ((p2cread, 0), (c2pwrite, 1), (errwrite, 2)):
++                if fd != -1:
++                    file_actions.append((os.POSIX_SPAWN_DUP2, fd, fd2))
++            # close_fds : les fichiers que Python ouvre ne passent pas aux enfants (O_CLOEXEC, PEP 446) ; pass_fds : rendus héritables
++            for fd in pass_fds:
++                os.set_inheritable(fd, True)
++            if file_actions:
++                kwargs['file_actions'] = file_actions
++            spawn = os.posix_spawn if os.path.dirname(executable) else os.posix_spawnp
++            if env is None:
++                env = os.environ
++            old_cwd = None
++            # restore_signals : l'enfant doit avoir SIGPIPE par défaut (Python l'ignore, et un signal ignoré le reste après exec).
++            # posix_spawn n'accepte pas d'ensemble de signaux ici : le père le rétablit le temps du lancement.
++            old_pipe = signal.signal(signal.SIGPIPE, signal.SIG_DFL) if restore_signals and hasattr(signal, 'SIGPIPE') else None
++            if cwd is not None:
++                # posix_spawn n'a pas de « changer de dossier » dans Python : le père change le sien le temps du lancement
++                # (un seul fil d'exécution sous webOS)
++                old_cwd = os.getcwd()
++                os.chdir(cwd)
++            try:
++                self.pid = spawn(executable, args, env, **kwargs)
++            finally:
++                if old_cwd is not None:
++                    os.chdir(old_cwd)
++                if old_pipe is not None:
++                    signal.signal(signal.SIGPIPE, old_pipe)
++            self._child_created = True
++            self._close_pipe_fds(p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite)
++
+         def _execute_child(self, args, executable, preexec_fn, close_fds,
+                            pass_fds, cwd, env,
+                            startupinfo, creationflags, shell,
+@@ -1859,6 +1910,13 @@
+ 
+             sys.audit("subprocess.Popen", executable, args, cwd, env)
+ 
++            if _webos_spawn:
++                self._webos_spawn(args, executable, env, cwd, preexec_fn, pass_fds, close_fds,
++                                  p2cread, p2cwrite, c2pread, c2pwrite, errread, errwrite,
++                                  restore_signals, gid, gids, uid, umask,
++                                  start_new_session, process_group)
++                return
++
+             if (_USE_POSIX_SPAWN
+                     and os.path.dirname(executable)
+                     and preexec_fn is None

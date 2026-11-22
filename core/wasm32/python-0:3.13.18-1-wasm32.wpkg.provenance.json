@@ -1,0 +1,32 @@
+{
+  "formatVersion": 1,
+  "package": "python-0:3.13.18-1-wasm32.wpkg",
+  "sha256": "0c7c55c993146bbb00dfdabc118b3a66f15e608f37ee32a2a970b5f9087d9b90",
+  "recipe": {
+    "path": "ports/python",
+    "files": {
+      "WEBBUILD": "2c9fc94419d340536ec92068c145d449c3d13b686319ab01070425daee7d9fb8",
+      "patches/0001-socket-sans-gethostbyname.patch": "fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593",
+      "patches/0002-subprocess-posix-spawn.patch": "cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a"
+    }
+  },
+  "sources": [
+    {
+      "source": "https://www.python.org/ftp/python/3.13.18/Python-3.13.18.tar.xz",
+      "sha256": "abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68"
+    },
+    {
+      "source": "patches/0001-socket-sans-gethostbyname.patch",
+      "sha256": "fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593"
+    },
+    {
+      "source": "patches/0002-subprocess-posix-spawn.patch",
+      "sha256": "cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 1795354388
+}
