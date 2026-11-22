@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "name": "core",
-  "serial": 2026112101,
-  "expires": "2027-01-20T18:27:43.994Z",
-  "generated": "2026-11-21T18:27:43.994Z",
+  "serial": 2026112201,
+  "expires": "2027-01-21T06:39:13.316Z",
+  "generated": "2026-11-22T06:39:13.316Z",
   "packages": {
     "hello": {
       "version": "1.0-1",
@@ -23,16 +23,16 @@
       "tier": "system"
     },
     "nano": {
-      "version": "8.4-1",
-      "filename": "nano-0:8.4-1-wasm32.wpkg",
-      "size": 252090,
-      "sha256": "f4404b77fffc959f673741c30ba3cd3d21061f28e0d653d2584fe28aeab2b6f8",
+      "version": "8.4-2",
+      "filename": "nano-0:8.4-2-wasm32.wpkg",
+      "size": 252151,
+      "sha256": "d807f2144dfca9888b8b4dfed39c346bfd9e8468ad620e34a1962b5293e04dd5",
       "chunkManifest": {
         "formatVersion": 1,
-        "size": 252090,
+        "size": 252151,
         "chunkSize": 1048576,
         "chunks": [
-          "f4404b77fffc959f673741c30ba3cd3d21061f28e0d653d2584fe28aeab2b6f8"
+          "d807f2144dfca9888b8b4dfed39c346bfd9e8468ad620e34a1962b5293e04dd5"
         ]
       },
       "desc": "éditeur de texte simple pour le terminal",

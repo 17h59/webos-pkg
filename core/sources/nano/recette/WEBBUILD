@@ -3,7 +3,7 @@
 # Sources : archives d'origine conservées par Debian (versions de Debian 13 « trixie »).
 pkgname=nano
 pkgver=8.4
-pkgrel=1
+pkgrel=2
 _ncurses=6.5+20250216
 pkgdesc="éditeur de texte simple pour le terminal"
 url="https://www.nano-editor.org/"
