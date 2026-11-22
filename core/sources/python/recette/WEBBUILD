@@ -5,25 +5,29 @@
 # Source : python.org (archive identique à l'archive d'origine de Debian, même SHA-256).
 pkgname=python
 pkgver=3.13.18
-pkgrel=1
+pkgrel=2
 _pyver=3.13
+_zlib=1.3.1
 pkgdesc="langage Python 3 (CPython) avec sa bibliothèque standard"
 url="https://www.python.org/"
-license=('PSF-2.0')
+license=('PSF-2.0' 'Zlib')
 arch=wasm32
 tier=system
 provides=("python3=${pkgver}")
+embeds=("zlib=${_zlib}")
 source=("https://www.python.org/ftp/python/${pkgver}/Python-${pkgver}.tar.xz"
+        "https://zlib.net/fossils/zlib-${_zlib}.tar.gz"
         'patches/0001-socket-sans-gethostbyname.patch'
         'patches/0002-subprocess-posix-spawn.patch')
 sha256sums=('abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68'
+            '9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23'
             'fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593'
             'cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a')
 
 # Fonctions que wasi-libc DÉCLARE sans les fournir (le configure de CPython ne fait souvent que compiler, sans lier), en-têtes de la
 # machine de construction vus à tort, et ce que webOS n'a pas (epoll, timerfd, eventfd, memfd, DNS, utmp, setrlimit…).
 _cache=(ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no ac_cv_func_mmap_fixed_mapped=no
-  ac_cv_header_zlib_h=no ac_cv_header_lzma_h=no ac_cv_header_bzlib_h=no ac_cv_header_netpacket_packet_h=no
+  ac_cv_header_lzma_h=no ac_cv_header_bzlib_h=no ac_cv_header_netpacket_packet_h=no
   ac_cv_buggy_getaddrinfo=no ac_cv_header_sys_resource_h=no ac_cv_header_utmp_h=no ac_cv_have_decl_UT_NAMESIZE=no
   ac_cv_func_epoll=no ac_cv_func_epoll_create=no ac_cv_func_epoll_create1=no ac_cv_header_sys_epoll_h=no
   ac_cv_func_timerfd_create=no ac_cv_header_sys_timerfd_h=no ac_cv_header_sys_eventfd_h=no ac_cv_func_eventfd=no
@@ -43,10 +47,17 @@ build() {
   (cd native && ./configure --prefix="$srcdir/native-install" --without-ensurepip && make -j"$(nproc)" && make install)
   local hostpy="$srcdir/native-install/bin/python3"
 
-  # 2. CPython pour webOS. SOCK_RAW : absent de wasi-libc. Les constantes CLOCK_* sont des pointeurs sous WASI : convertis en entier
+  # 2. zlib (compression : zlib, gzip, zipfile, binascii.crc32…), bibliothèque statique liée dans python
+  local zst="$srcdir/zlib-stage"
+  (cd "zlib-${_zlib}" && CC=webos-cc AR=webos-ar CFLAGS="-Oz" CHOST=wasm32 ./configure --static --prefix=/usr && make libz.a)
+  install -Dm644 "zlib-${_zlib}/zlib.h" "$zst/include/zlib.h"
+  install -Dm644 "zlib-${_zlib}/zconf.h" "$zst/include/zconf.h"
+  install -Dm644 "zlib-${_zlib}/libz.a" "$zst/lib/libz.a"
+
+  # 3. CPython pour webOS. SOCK_RAW : absent de wasi-libc. Les constantes CLOCK_* sont des pointeurs sous WASI : convertis en entier
   #    et retour sans perte en 32 bits (-Wno-error=int-conversion).
   cd "Python-$pkgver"
-  PKG_CONFIG=false CONFIG_SITE=/w/toolchain/autoconf/config.site WEBOS_CC_CONFIGURE=1 CC=webos-cc CFLAGS="-Oz -D_GNU_SOURCE -DSOCK_RAW=3" \
+  ZLIB_CFLAGS="-I$zst/include" ZLIB_LIBS="-L$zst/lib -lz" PKG_CONFIG=false CONFIG_SITE=/w/toolchain/autoconf/config.site WEBOS_CC_CONFIGURE=1 CC=webos-cc CFLAGS="-Oz -D_GNU_SOURCE -DSOCK_RAW=3" \
     ./configure --host=wasm32-wasi --build=x86_64-linux-gnu --with-build-python="$hostpy" --prefix=/usr \
       --disable-test-modules --without-ensurepip --disable-ipv6 --without-readline "${_cache[@]}"
   # l'éditeur de liens de Zig refuse --stack-first ; même taille de pile et de mémoire initiale que la cible WASI de CPython
@@ -75,5 +86,6 @@ package() {
   ln -s "python${_pyver}" "$pkgdir/usr/bin/python3"
   ln -s python3 "$pkgdir/usr/bin/python"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/python/LICENSE"
+  install -Dm644 "$srcdir/zlib-${_zlib}/LICENSE" "$pkgdir/usr/share/licenses/python/zlib-LICENSE"
   # page de manuel : python3.13.1 et le lien python3.1 sont posés par make install
 }

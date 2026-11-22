@@ -1,0 +1,36 @@
+{
+  "formatVersion": 1,
+  "package": "python-0:3.13.18-2-wasm32.wpkg",
+  "sha256": "10862265cd06eb79884e92d4e8e56155c5a3e05c686907443700cd4341ea1cba",
+  "recipe": {
+    "path": "ports/python",
+    "files": {
+      "WEBBUILD": "abeaa15fb4a7bb10fb8beeb3676fc136b9664f01b6346127fa0082b72de0440b",
+      "patches/0001-socket-sans-gethostbyname.patch": "fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593",
+      "patches/0002-subprocess-posix-spawn.patch": "cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a"
+    }
+  },
+  "sources": [
+    {
+      "source": "https://www.python.org/ftp/python/3.13.18/Python-3.13.18.tar.xz",
+      "sha256": "abb0102e6d4ae027509bcb82327d9dd85515b44a3ba8ad538cfc5e9847029f68"
+    },
+    {
+      "source": "https://zlib.net/fossils/zlib-1.3.1.tar.gz",
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+    },
+    {
+      "source": "patches/0001-socket-sans-gethostbyname.patch",
+      "sha256": "fb13911d7850bea6dbad6b3827e4b60ea8a7eaee54b995efb39e06b9b9b20593"
+    },
+    {
+      "source": "patches/0002-subprocess-posix-spawn.patch",
+      "sha256": "cf49da887a41a389ce8b6ccb17e128c3ba10c9acc195c4d997ac6908e486592a"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 1795355869
+}
