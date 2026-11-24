@@ -1,0 +1,23 @@
+# WEBBUILD de standard — méta-paquet du profil « Standard » de l'assistant de premier démarrage (M3.7, D-FIRSTBOOT).
+# Il ne livre qu'un README ; ses dépendances font le profil. Python reste un choix à part (≈ 8 Mio).
+pkgname=standard
+pkgver=1
+pkgrel=1
+pkgdesc="profil Standard de webOS : nano, file et tree"
+url="https://github.com/17h59/webos"
+license=('MIT')
+arch=wasm32
+tier=system
+depends=('nano' 'file' 'tree')
+makedepends=()
+embeds=()
+source=('README')
+sha256sums=('e62ab4e522dc6ecaf9961d4c494cd1d5f37614488d20df7c498cd2fceb99d68b')
+
+build() {
+  :
+}
+
+package() {
+  install -Dm644 README "$pkgdir/usr/share/doc/standard/README"
+}

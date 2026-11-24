@@ -1,0 +1,23 @@
+{
+  "formatVersion": 1,
+  "package": "standard-0:1-1-wasm32.wpkg",
+  "sha256": "9efc7d2ff613940e5f7276b3890aede22e8a5f2de2aa2481f117319d10db255c",
+  "recipe": {
+    "path": "ports/standard",
+    "files": {
+      "README": "e62ab4e522dc6ecaf9961d4c494cd1d5f37614488d20df7c498cd2fceb99d68b",
+      "WEBBUILD": "6a6c91f200c0ea9c1c4bbc2f45295bce26ee183695f6287ec44fd823f926482f"
+    }
+  },
+  "sources": [
+    {
+      "source": "README",
+      "sha256": "e62ab4e522dc6ecaf9961d4c494cd1d5f37614488d20df7c498cd2fceb99d68b"
+    }
+  ],
+  "builder": {
+    "image": "webos-builder:a177f4ff76571e42",
+    "network": "none"
+  },
+  "sourceDateEpoch": 0
+}

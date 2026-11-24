@@ -1,0 +1,3 @@
+Profil « Standard » de webOS : ce paquet ne contient que ce fichier ; il installe, par ses dépendances,
+les outils proposés par l'assistant de premier démarrage (firstboot) : nano, file et tree.
+Le retirer (« sudo webpkg -R standard ») ne retire pas ces outils.
